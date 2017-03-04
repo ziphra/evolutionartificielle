@@ -62,9 +62,25 @@ def score(listeapp, seq):
         pos2 = listeapp[i][1]
         if complementaire(seq, pos1, pos2) == True:
             score += 1
-            print(pos1, pos2, seq[pos1], seq[pos2])
     return score
 
+#reproduction
+#le score est proportionelle à la probabilité de se reproduire
+#score de 5 = 5/21 chances de se reproduire (car 21 = nombre d'appariements de la cible)
+
+def reproduction(ListeScore, sequences):
+    c = 0
+    for i in ListeScore:
+        scorei = ListeScore[i]
+        n = random.randint(0,20)
+        if n <= scorei:
+            NewSeq = sequences[i]
+            sequences.append(NewSeq)
+            print(NewSeq)
+            c+=1
+    print(c)
+
+    return sequences, c
 
 
 
@@ -84,10 +100,17 @@ repli = [repli1] + [repli2] + [repli3] + [repli4]
 
 listeapp = (ListeAppariements(repli))
 
-
 #score
-# test : donne le score pour les séquences 1 à 10
-for i in range(10):
+# range les scores dans une liste
+ListeScore = []
+for i in range(len(sequences)):
     seq = sequences[i]
-    print(score(listeapp, seq))
+    ScoreSeq = (score(listeapp, seq))
+    ListeScore.append(ScoreSeq)
+print(ListeScore)
 
+#reproduction
+#Après avoir compté le nombre de nouvelles séquences créées après la première genération, et l'avoir comparé avec les scores,
+# le resultat de cette fonction semble cohérent.
+# À revérifier : test plus précis
+reproduction(ListeScore, sequences)
