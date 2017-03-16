@@ -1,4 +1,5 @@
 __author__ = 'euphrasieservant'
+# -*- coding:utf-8 *-*
 # population de départ : N séquences d'ARNt de longueur l =
 # chaque séquence est constitué de l nucléotides choisis au hasard
 import random
@@ -45,69 +46,60 @@ def complementaire(sequences,pos1, pos2):
         complement = True
     elif (sequences[pos1] == "G" and sequences[pos2] == "C") or (sequences[pos2] == "G" and sequences[pos1] == "C"):
         complement = True
+    elif (sequences[pos1] == "G" and sequences[pos2] == "U") or (sequences[pos2] =="G" and sequences[pos1] == "U"):
+        complement = True
     else:
         complement = False
     return complement
 
 
 # score
-def score(listeapp, seq):
-    score = 0
-    for i in range(len(listeapp)):
-        pos1 = listeapp[i][0]
-        pos2 = listeapp[i][1]
-        if complementaire(seq, pos1, pos2) == True:
-            score += 1
-    return score
+# range les scores dans une liste
+def score(listeapp, sequences):
+    ListeScore = []
+    for k in range(0,len(sequences)): #len sequences = n
+        score = 0
+        for i in range(0,(len(listeapp))):
+            pos1 = listeapp[i][0]
+            pos2 = listeapp[i][1]
+            if complementaire(sequences[k], pos1, pos2) == True:
+                score += 1
+
+        ListeScore.append(score)
+    return ListeScore
 
 #reproduction
 #le score est proportionel à la probabilité de se reproduire
 #score de 5 = 5/21 chances de se reproduire (car 21 = nombre d'appariements de la cible)
 
-def reproduction(ListeScore, sequences):
+def reproduction(ListeScore, enfants):
     c = 0  #un compteur qui nous indique combien de nouvelles séquences ont été crées
-    for i in ListeScore:
+    for i in range (0,(len(ListeScore))):
         scorei = ListeScore[i]
         n = random.randint(0,20)
         if n <= scorei:
             NewSeq = sequences[i]
             mutation(NewSeq,probamutation)
-            sequences.append(NewSeq)
+            enfants.append(NewSeq)
             c+=1
-    print(c)
+    #print(c)
 
-    return sequences, c
+    return enfants
 
 
 
-# param reps: une liste de Repli
-def ListeAppariements_NEW(reps):
-    listeapp = []
-    for i in range(0, len(reps)):  #parce que il y a 4 repliements dans la séquence cible
-        a = reps[i]._a  #premier élément du repli dans le sens 5'-3'   (1 dans le cas du repli1)
-        b = reps[i]._b  #premier élement du repli dans le sens 3'-5'   (72 dans le cas du repli1)
-        c = reps[i]._c  #dernier element du repli dans le sens 5'-3'   (7 dans le cas du repli1)
-        for j in range(a, b+1):
-            pos = []
-            pos.append(a)
-            pos.append(c)
-            listeapp.append(pos)
-            a += 1
-            c -= 1
-    return listeapp
 
 # induit une mutation avec une probabilité de 1/100
 def mutation(seq,probamutation):  #seq = un seul ARNt
     tirage = random.randint(1,100)
     augc = ["A","U","G", "C"]
-    if tirage <= probamutation: #  1 chance sur 100
+    if tirage == probamutation: #  1 chance sur 100
         pos_mutation = random.randint(0,(len(seq)-1))  # une position choisie au hasard dans la séquence de longueur l
         nuc = augc[random.randint(0,3)]  # un nucléotide de remplacement choisi au hasard
         while nuc == seq[pos_mutation]:  # au cas ou le nucléotide de remplacement est le même que l'original
             nuc = augc[random.randint(0,3)]
-        else:
-            seq[pos_mutation] = nuc
-            print(seq)
+        seq[pos_mutation] = nuc
+        print(seq)
     return seq
 
 
@@ -115,8 +107,8 @@ def mutation(seq,probamutation):  #seq = un seul ARNt
 #P R O G R A M M E  P R I N C I P A L
 
 #population de depart
-l = 75  # longueur de la séquence
-N = 10000  #nombre de chaines
+l = 10 # longueur de la séquence
+N = 100  #nombre de chaines
 sequences = PopDeDepart(l,N)
 
 #appariements
@@ -129,14 +121,7 @@ repli = [repli1] + [repli2] + [repli3] + [repli4]
 listeapp = (ListeAppariements(repli))
 print(listeapp)
 
-#score
-# range les scores dans une liste
-ListeScore = []
-for i in range(len(sequences)):
-    seq = sequences[i]
-    ScoreSeq = (score(listeapp, seq))
-    ListeScore.append(ScoreSeq)
-print(ListeScore)
+
 
 # mutation
 probamutation = 100
@@ -148,4 +133,20 @@ probamutation = 100
 # la probabilité de se reproduire est de 6/21
 # (6/21) * 10 000 = 2 857 => à peu près égale aux nombres de nouvelles séquences créées
 
-reproduction(ListeScore, sequences)
+nbr_generation = 4
+generations_enfants = []
+
+for i in range(nbr_generation) :
+    ListeScore = score(listeapp, sequences)
+    enfants = reproduction(ListeScore, sequences)
+    generations_enfants.append(enfants)
+    sequences = enfants
+    print (enfants)
+
+
+
+
+
+#print(generations_enfants)
+
+
