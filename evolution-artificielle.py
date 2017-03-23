@@ -1,8 +1,9 @@
-__author__ = 'euphrasieservant'
+__authors__ = 'euphrasieservant', 'agathewallet'
 # -*- coding:utf-8 *-*
 # population de départ : N séquences d'ARNt de longueur l =
 # chaque séquence est constitué de l nucléotides choisis au hasard
 import random
+import matplotlib.pyplot as plt
 
 
 # constitution de la population de départ
@@ -76,16 +77,13 @@ def reproduction(ListeScore, enfants):
     c = 0  #un compteur qui nous indique combien de nouvelles séquences ont été crées
     for i in range (0,(len(ListeScore))):
         scorei = ListeScore[i]
-        n = random.randint(0,20)
+        n = random.randint(0,21)
         if n <= scorei:
-            NewSeq = sequences[i]
-            mutation(NewSeq,probamutation)
+            NewSeq = mutation(sequences[i],probamutation)
             enfants.append(NewSeq)
             c+=1
-    #print(c)
-
+    print(c)
     return enfants
-
 
 
 
@@ -99,16 +97,20 @@ def mutation(seq,probamutation):  #seq = un seul ARNt
         while nuc == seq[pos_mutation]:  # au cas ou le nucléotide de remplacement est le même que l'original
             nuc = augc[random.randint(0,3)]
         seq[pos_mutation] = nuc
-        print(seq)
     return seq
 
-
+def MoyenneScore(ListeScore):
+    moy = 0
+    for i in range(0, (len(ListeScore))):
+        moy += ListeScore[i]
+    moy = moy/(len(ListeScore))
+    return moy
 
 #P R O G R A M M E  P R I N C I P A L
 
 #population de depart
-l = 10 # longueur de la séquence
-N = 100  #nombre de chaines
+l = 75 # longueur de la séquence
+N = 10  #nombre de chaines
 sequences = PopDeDepart(l,N)
 
 #appariements
@@ -118,8 +120,8 @@ repli3 = [27, 31, 43]
 repli4 = [49, 53, 65]
 repli = [repli1] + [repli2] + [repli3] + [repli4]
 
-listeapp = (ListeAppariements(repli))
-print(listeapp)
+listeapp = (ListeAppariements(repli)) #liste de liste contenant une paire de position : la position des appariements
+
 
 
 
@@ -132,21 +134,37 @@ probamutation = 100
 # => Les scores oscillent autour de 5. Si en moyenne, une séquence a un score de 5 (sur un maximum de 21)
 # la probabilité de se reproduire est de 6/21
 # (6/21) * 10 000 = 2 857 => à peu près égale aux nombres de nouvelles séquences créées
+ListeScore = score(listeapp, sequences)
+# print(reproduction(ListeScore, sequences))
 
-nbr_generation = 4
+
+nbr_generation = 50
 generations_enfants = []
+ListeMoy = []
 
-for i in range(nbr_generation) :
+for i in range(nbr_generation):
     ListeScore = score(listeapp, sequences)
     enfants = reproduction(ListeScore, sequences)
     generations_enfants.append(enfants)
+
     sequences = enfants
-    print (enfants)
+
+    moy = MoyenneScore(ListeScore)
+    ListeMoy.append(moy)
 
 
 
 
 
-#print(generations_enfants)
+# G R A P H I Q U E
+print (ListeMoy)
+abs = []
+for i in range(nbr_generation):
+    abs.append(i+1)
+print (abs)
 
 
+plt.plot(abs,ListeMoy)
+plt.ylabel('Score Moyen')
+plt.xlabel('Nombre De Generation')
+plt.show()
