@@ -69,7 +69,8 @@ def score(listeapp, sequences, consensus):
             value = consensus.get(cle)  # on recupere les valeurs : donc les positions ex : (33, 8) pour U
             for o in range(len(value)):  # pour chacune de ces valeurs
                 n = value[o]  # on recupere dans n une des valeurs : ex : value[O] = 33
-                if sequences[k][n] == cle:  # si le nucleotide de la sequence k, à la position n = cle (ex : si nucleotide de la sequence k = U)
+                if sequences[k][n] == cle:  # si le nucleotide de la sequence k, à la position n = cle
+                                            # (ex : si nucleotide de la sequence k = U)
                     score += 1  # alors le score augmente
 
         ListeScore.append(score)
@@ -88,30 +89,36 @@ def reproductionbis(sequences, N):  # prends plus de temps que l'autre fonction 
         if a <= scorei:
             NewSeq = mutation(sequences[i], probamutation)
             enfants.append(NewSeq)
-    while len(enfants) < N:        # tant que la [enfants] ne contient pas autant d'elements que la liste de départ, repeter
+    while len(enfants) < N:        # tant que la [enfants] ne contient pas autant d'elements que la liste de départ,
+                                    #  repeter
         b = random.randint(0, (len(enfants)-1))  #tire un nombre entre 0 et (len de enfants)-1
         ListeScore = score(listeapp, enfants, consensus)
         for j in range((ListeScore[b]//2)):
             enfants.append(enfants[b])
-    return [enfants, ListeScore]  # on retourne le score et les enfants dans une liste pour pouvoir les retourner et les utiliser séparement.
+    return [enfants, ListeScore]  # on retourne le score et les enfants dans une liste pour pouvoir les retourner et les
+                                  #  utiliser séparement.
 
 
+# avec l'ajout des consensus, le score max devient 42 (21 appariements + 21 consensus)
 
-
-def reproduction(sequences, N):
+def reproduction(sequences, N, moy):
     enfants = []
+
     ListeScore = score(listeapp, sequences, consensus)
     while len(enfants) < (N+1):
-        j = random.randint(0,(N-1))
-        scorej = ListeScore[j]
-        for i in range(scorej//2):
-            NewSeq = mutation(sequences[j], probamutation)
-            enfants.append(NewSeq)
 
-    return [enfants, ListeScore]
-
-
-
+        a = random.randint(0,42)  # 21 appariements + 21 consensus
+        j = random.randint(0,(N-1))  # un nombre au hasard entre 0 N-1 soit pour chaque indice de la liste
+                                    # ex : une liste de N = 75 sequences indicées de 0 à N-1 = 74)
+        scorej = ListeScore[j]      # on tire la séquence associé au score grace à l'indice du score
+        if (a <= scorej) or (scorej >= moy):             # scorj chance sur 42 que a soit <= scorej
+                                                           #  on rajoute une sélection : scorej >= à la moyenne
+                                                            # des scores précédents
+            NewSeq = mutation(sequences[j], probamutation)  # mutation ...
+            enfants.append(NewSeq) # stockage des séquences dans une liste
+    ListeScore = score(listeapp, enfants, consensus)
+    return [enfants, ListeScore]  # on retourne une liste avec les enfants et les scores pour pouvoir retourner
+                                    # ces deux elements en même temps et les utiliser séparément
 
 
 
@@ -159,6 +166,7 @@ repli4 = [49, 53, 65]
 repli = [repli1] + [repli2] + [repli3] + [repli4]
 
 listeapp = (ListeAppariements(repli)) #liste de liste contenant une paire de position : la position des appariements
+                                    # de la sequence cible
 
 
 # mutation
@@ -166,27 +174,30 @@ probamutation = 1
 
 #reproduction
 
-nbr_generation = 350
+nbr_generation = 200
 generations_enfants = []
 ListeMoy = []
-
+moy = 0
 
 for i in range(nbr_generation):
-    EnfantsScore = reproduction(enfants, N)
-    ListeScore = EnfantsScore[1]
-    enfants = EnfantsScore[0]
 
-    moy = MoyenneScore(ListeScore)
-    ListeMoy.append(moy)
+    EnfantsScore = reproduction(enfants, N, moy)  # enfants ici = PopDeDépart
+    ListeScore = EnfantsScore[1]        # en postion 1 dans la liste on a retourné Liste score
+                                        # return [enfants, ListeScore]
+    moy = MoyenneScore(ListeScore)       # on calcul la moyenne pour tracer le graphique
+    ListeMoy.append(moy)                # on stocke les moyennes dans une liste
+    enfants = EnfantsScore[0]           # en position 0, la liste des nv sequences
+
+
 
 
 
 # G R A P H I Q U E
 abs = []
 for i in range(nbr_generation):
-    abs.append(i+1)
+    abs.append(i+1)     # numero de la génération
 
-plt.plot(abs,ListeMoy)
-plt.ylabel('Score Moyen')
-plt.xlabel('Nombre De Generation')
-plt.show()
+plt.plot(abs, ListeMoy)          # (numero de la génération en x, moyenne en y)
+plt.ylabel('Score Moyen')           # titre axe des y
+plt.xlabel('Nombre De Generation')      # titre axe des x
+plt.show()      # affichage
