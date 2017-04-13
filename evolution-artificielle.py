@@ -68,11 +68,11 @@ def score(listeapp, sequences, consensus):
                                                                                 # liste index out of range
                     if complementaire(sequences[k], pos1, pos2) == True:
                         score += 1
-        for cle in consensus:  # pour A, T , G, C, U qui sont les clés de mon dic
+        for cle in consensus:  # pour A, G, C, U qui sont les clés de mon dic
             value = consensus.get(cle)  # on recupere les valeurs : donc les positions ex : (33, 8) pour U
             for o in range(len(value)):  # pour chacune de ces valeurs
                 n = value[o]  # on recupere dans n une des valeurs : ex : value[O] = 33
-                if sequences[k][n] == cle:  # si le nucleotide de la sequence k, à la position n = cle
+                if (len(sequences[k])-1) >= n and sequences[k][n] == cle :  # si le nucleotide de la sequence k, à la position n = cle
                                             # (ex : si nucleotide de la sequence k = U)
                     score += 1  # alors le score augmente
 
@@ -103,7 +103,7 @@ def reproductionbis(sequences, N):  # prends plus de temps que l'autre fonction 
 
 
 # avec l'ajout des consensus, le score max devient 42 (21 appariements + 21 consensus)
-
+# et de la recombinaison
 def reproduction(sequences, N, moy):
     enfants = []
 
@@ -121,8 +121,23 @@ def reproduction(sequences, N, moy):
 
             enfants.append(NewSeq) # stockage des séquences dans une liste
     ListeScore = score(listeapp, enfants, consensus)
+
+    TirageRecomb = random.randint(0,100)
+    if TirageRecomb == 16:             # 1 chance sur 100
+        c = random.randint(0, (len(enfants)-1))
+        d = random.randint(0, (len(enfants)-1))
+        while c == d:
+            c = random.randint(0, (len(enfants)-1))
+            d = random.randint(0, (len(enfants)-1))
+        sequence1 = enfants[c]
+        sequence2 = enfants[d]
+        recombinés = recombinaison(sequence1, sequence2)
+        enfants[c] = recombinés[0]
+        enfants[d] = recombinés[1]
+
     return [enfants, ListeScore]  # on retourne une liste avec les enfants et les scores pour pouvoir retourner
                                     # ces deux elements en même temps et les utiliser séparément
+
 
 
 # induit une mutation avec une probabilité de 1/100
@@ -147,7 +162,7 @@ def mutation(seq, substitution, deletion, insertion):  # seq = un seul ARNt
 
     return seq
 
-
+# moyenne
 def MoyenneScore(ListeScore):
     moy = 0
     for i in range(0, (len(ListeScore))):
@@ -158,6 +173,30 @@ def MoyenneScore(ListeScore):
         moy = moy/(len(ListeScore))
     return moy
 
+
+# recombinaison
+def recombinaison(sequence1, sequence2):
+    pos1 = random.randint(0, (len(sequence1)-1))  # on choisit 2 position au hasard dans 2 séquences qui seront
+                                                    # les points d'inititaions de la recombinaison
+    pos2 = random.randint(0, (len(sequence2)-1))
+
+    a = random.randint(10, 35)  # on choisit la longueur des morceaux d'ADN qui vont se recombiner
+    b = random.randint(10, 35)
+    if pos1 < a:    # car si pos1 > a, alors a sera en dehors de la liste
+        seq1 = sequence1[pos1:(pos1+a)]  # seq1 = morceau de séquence qui va être recombiné
+    else:
+        seq1 = sequence1[pos1:(pos1+a)]
+    if pos2 < b:
+        seq2 = sequence2[pos1:(pos1+b)]
+    else:
+        seq2 = sequence2[pos1:(pos1+b)]
+
+    sequence1bis = sequence1[0:(pos1-1)] + seq2 + sequence1[a:(len(sequence1)-1)]
+    sequence2bis = sequence2[0:(pos2-1)] + seq1 + sequence2[a:(len(sequence2)-1)]
+    return [sequence1bis, sequence2bis]
+
+
+
 #P R O G R A M M E  P R I N C I P A L
 
 #population de depart
@@ -167,7 +206,7 @@ enfants = PopDeDepart(l,N)
 
 #sequences consensus
 
-consensus = {"U":(33, 8), "C":(11, 25, 32, 48, 60, 62), "T":(11, 25, 32, 48, 60, 62), "A":(14, 21, 58, 9, 10, 15, 24, 37, 52, 57), "G":(19, 18, 53,9, 10, 15, 24, 37, 52, 57)}
+consensus = {"C": (11, 25, 32, 48, 60, 62, 74, 75), "U": (8, 11, 25, 32, 33, 48, 60, 62), "A": (14, 21, 58, 9, 10, 15, 24, 37, 52, 57, 75), "G":(19, 18, 53,9, 10, 15, 24, 37, 52, 57)}
 
 #appariements
 repli1 = [1, 7, 72]
@@ -186,14 +225,13 @@ deletion = 2
 insertion = 3
 
 #reproduction
-
 nbr_generation = 100
 generations_enfants = []
 ListeMoy = []
 moy = 0
 
 for i in range(nbr_generation):
-
+    print(moy)
     EnfantsScore = reproduction(enfants, N, moy)  # enfants ici = PopDeDépart
     ListeScore = EnfantsScore[1]        # en postion 1 dans la liste on a retourné Liste score
                                         # return [enfants, ListeScore]
