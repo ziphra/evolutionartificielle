@@ -104,7 +104,7 @@ def reproduction(sequences, N):
         j = random.randint(0, (N-1))            # Un nombre au hasard entre 0, N-1 soit pour chaque indice de la liste
         scorej = ListeScore[j]                  # On tire la séquence associée au score grace à l'indice du score
         if scorej >= a :                        # scorj chance sur 42 que a soit <= scorej
-            NewSeq = mutation(sequences[j], substitution, deletion, insertion)  # mutation ou pas...
+            NewSeq = mutation(sequences[j])  # mutation ou pas...
             enfants.append(NewSeq)              # stockage des séquences dans une liste
     ListeScore = score(listeapp, enfants, consensus)  # calcul des nouveaux score
 
@@ -130,7 +130,10 @@ def reproduction(sequences, N):
 
 
 # induit une mutation avec une probabilité de 1/100
-def mutation(seq, substitution, deletion, insertion):   # seq = un seul ARNt
+def mutation(seq):   # seq = un seul ARNt
+    substitution = 1
+    deletion = 2
+    insertion = 3
     tirage = random.randint(1, 300)                     # il ya 1 chance /100 d'avoir une mutation de 3 types différents
                                                         # 1 chance /300 pour chaque type
                                                         # On tire aléatoirement un nombre entre 1, 300
