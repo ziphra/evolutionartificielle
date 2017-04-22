@@ -3,14 +3,20 @@ __authors__ = 'euphrasieservant', 'agathewallet'
 # population de départ : N séquences d'ARNt de longueur l =
 # chaque séquence est constitué de l nucléotides choisis au hasard
 import random
+import copy
 import matplotlib.pyplot as plt
 
 
 # constitution de la population de départ
+# param l : nombre de nucléotides dans une séquence
+# param N : nombre de séquences
+# return : une liste de N séquences de l nucléotides
+# (une séquence est une liste de nucléotides
+# une nucléotide est représentée par une chaine de 1 caratère: A, U, G ou C)
 def PopDeDepart(l, N):
 
     augc = ["A", "U", "G", "C"]             # Nucléotides
-    sequences = []                          # Une liste initialement vide qui contiendra LES séquences de la pop de départ
+    sequences = []                          # Une liste initialement vide qui contiendra les séquences de la pop de départ
 
     for i in range(N):                      # On crée N séquences en passant N fois dans cette boucle
         seq = []                            # Une liste initialement vide qui contiendra UNE séquence
@@ -23,10 +29,14 @@ def PopDeDepart(l, N):
 
 
 # PHÉNOTYPE
-# fonction qui génère la liste des appariements
+# Génération de la liste des appariements
 # sous forme d'une liste de paires de positions
-def ListeAppariements(repli):               # Repli est une liste contenant 3 éléments : le premier  et le dernier
-                                            # nucléotide dans le sens 5'-3' du repli, et le premier dans le sens 3'-5'
+# param repli : liste contenant 3 éléments : le premier  et le dernier
+# nucléotide dans le sens 5'-3' du repli, et le premier dans le sens 3'-5'
+# return : une liste de paires de positions (chaque paire
+# représente les positions des nucléotides qui s'apparient entre eux)
+# pour la formation des boucles
+def ListeAppariements(repli):
     listeapp = []                           # Une liste initialement vide qui contiendra les paires de positions des
                                             # nucléotides appariés dans la formation des boucles
     for i in range(0, len(repli)):          # Pour tous les repli (repli1, repli2, repli3, repli4)
@@ -44,29 +54,47 @@ def ListeAppariements(repli):               # Repli est une liste contenant 3 é
     return listeapp
 
 
-# permet de verifier si 2 nucléotides à deux positions précises de la séquences sont complémentaires ou non
+# Vérifier si 2 nucléotides à deux positions précises de la séquences
+# sont complémentaires ou non
+# param sequence : une liste de nucléotides
+# param pos1 : position (entier) du 1er nucléotide
+# param pos2 : position (entier) du 2eme nucléotide
+# return true si les 2 nucléotides sont complémentaires
 def complementaire(sequence, pos1, pos2):   # pos1 et pos2 sont les positions des nucleotides dont on cherche
                                             # à savoir la complémentarité
-    # A et U ou U et A s'apparient
-    if ((len(sequence)-1) >= (pos1) and (len(sequence)-1) >= (pos2)) and ((sequence[pos1] == "A" and sequence[pos2] == "U") or (sequence[pos2] == "A" and sequence[pos1] == "U")):
-        complement = True
+    if (len(sequence)-1 < pos1):
+        # pos1 en dehors de la séquence
+        return False
 
-    # G et C ou C et G s'apparient
-    elif ((len(sequence)-1) >= (pos1) and (len(sequence)-1) >= (pos2)) and ((sequence[pos1] == "G" and sequence[pos2] == "C") or (sequence[pos2] == "G" and sequence[pos1] == "C")):
-        complement = True
+    if (len(sequence)-1 < pos2):
+        # pos2 en dehors de la séquence
+        return False
 
-    # G et U ou U et G s'apparient
-    elif ((len(sequence)-1) >= (pos1) and (len(sequence)-1) >= (pos2)) and ((sequence[pos1] == "G" and sequence[pos2] == "U") or (sequence[pos2] == "G" and sequence[pos1] == "U")):
-        complement = True
-
-    # si à pos1 et à pos2 on trouve 2 nucs ne s'appariant pas on retourne False
+    complement = False
+    if (sequence[pos1] == "A"):
+        # A s'apparie avec U
+        complement = (sequence[pos2] == "U")
+    elif (sequence[pos1] == "U"):
+        # U s'apparie avec A ou G
+        complement = ((sequence[pos2] == "A") or (sequence[pos2] == "G"))
+    elif (sequence[pos1] == "G"):
+       # U s'apparie avec C ou U
+        complement = ((sequence[pos2] == "C") or (sequence[pos2] == "U"))
+    elif (sequence[pos1] == "C"):
+        # C s'apparie avec G
+        complement = (sequence[pos2] == "G")
     else:
-        complement = False
-    return complement                           # On retourne True si les nucs s'apparient, False sinon
+        raise RuntimeError("Unexpected nucleotide " + sequence[pos1])
+    return complement
 
 
 # SCORE
-# range les scores dans une liste
+# calcule les scores des séquences
+# param listeapp : listes des paires de nucléotides s'appariant dans la séquence cible
+# param sequences : une population de séquences (liste de séquences)
+# param consensus : un dictionnaire dont les clefs sont les nucléotides consensus,
+# et les valeurs sont les positions où on les rencontre dans la séquence
+# return : scores des séquences (liste de même taille que la liste de séquences: un score par séquence)
 def score(listeapp, sequences, consensus):
     ListeScore = []                             # Une liste initialement vide qui contiendra tous les scores
     for k in range(0, len(sequences)):          # Pour chaque nucléotides de la séquence
@@ -75,7 +103,7 @@ def score(listeapp, sequences, consensus):
                 pos1 = listeapp[i][0]           # La position des nucléotides s'appariants dans la formation des boucles
                 pos2 = listeapp[i][1]
                 if (len(sequences[k])) >= pos1 and (len(sequences[k])) >= pos2:     # conditions pour éviter les erreurs
-                    print(len(sequences[k]))                                                                  # de types liste index out of range
+                                                                 # de types liste index out of range
                                                                                     # si la séquence se raccourcie
                     if complementaire(sequences[k], pos1, pos2) == True:            # Si les nucs peuvent s'apparier
                         score += 1                                                  # On incrémente le score de 1
@@ -89,25 +117,32 @@ def score(listeapp, sequences, consensus):
                                                                                     # si la séquence se raccourcie
                                                                                     # Si le nucleotide de la sequence k,
                                                                                     # à la position n = cle
-                                                                                    # Ex : sequences[k][33] == U
+                                                           # Ex : sequences[k][33] == U
                     score += 1                  # alors le score augmente + 1
         ListeScore.append(score)                # On ajoute le score obtenu à ListeScore
     return ListeScore
 
 #REPRODUCTION
+# génère une nouvelle population de séquences, en favorisant les séquences de plus grand score
+# en induisant ou pas des mutations, et des recombinaisons
+# param sequences : liste des séquences générées précédemment
+# param N : taille de la population = nombre de séquences
+# return : une nouvelle population, et la liste des scores associé à chaque séquence
 def reproduction(sequences, N):
     enfants = []                                # Une liste vide qui contiendra les séquences qui se sont dupliquées
+    e = 0
+
     ListeScore = score(listeapp, sequences, consensus)  # On fait la liste des scores des séquences de la pop en question
     while len(enfants) < (N):                   # Tant que la population ne dépasse pas N
 
         a = random.randint(0, 45)               # 21 appariements + 24 consensus
         j = random.randint(0, (N-1))            # Un nombre au hasard entre 0, N-1 soit pour chaque indice de la liste
         scorej = ListeScore[j]                  # On tire la séquence associée au score grace à l'indice du score
-        if scorej >= a :                        # scorj chance sur 42 que a soit <= scorej
+        if scorej > a:
+                                                        # scorj chance sur 42 que a soit <= scorej
             NewSeq = mutation(sequences[j])  # mutation ou pas...
+            #NewSeq = sequences[j]
             enfants.append(NewSeq)              # stockage des séquences dans une liste
-    ListeScore = score(listeapp, enfants, consensus)  # calcul des nouveaux score
-
     TirageRecomb = random.randint(0, 100)       # On tire un nombre au hasard
     if TirageRecomb == 16:                      # 1 chance sur 100 de tomber sur 16
         c = random.randint(0, (len(enfants)-1)) # On choisit 2 séquences au hasard en tirant un nombre aléatoire
@@ -121,41 +156,45 @@ def reproduction(sequences, N):
         recombinés = recombinaison(sequence1, sequence2)
         enfants[c] = recombinés[0]
         enfants[d] = recombinés[1]
-
+    ListeScore = score(listeapp, enfants, consensus)
     return [enfants, ListeScore]                # on retourne une liste avec les enfants et les scores pour pouvoir
                                                 # retourner ces deux elements en même temps et les utiliser séparément
 
 
 
 
-
-# induit une mutation avec une probabilité de 1/100
+# MUTATION
+# induit une mutation ou pas
+# param seq : une séquence
+# return : la même séquence mutée ou pas
 def mutation(seq):   # seq = un seul ARNt
     substitution = 1
     deletion = 2
     insertion = 3
-    tirage = random.randint(1, 300)                     # il ya 1 chance /100 d'avoir une mutation de 3 types différents
-                                                        # 1 chance /300 pour chaque type
-                                                        # On tire aléatoirement un nombre entre 1, 300
-    augc = ["A","U","G", "C"]
+    tirage = random.randint(1, 100)                     # il ya 1 chance /100 d'avoir une mutation de 3 types différents                                                   # 1 chance /300 pour chaque type
+    seqbis = copy.deepcopy(seq)                                                 # On tire aléatoirement un nombre entre 1, 300
+    augc = ["A", "U", "G", "C"]
     pos_mutation = random.randint(0, (len(seq)-1))      # Une position choisie au hasard dans la séquence de longueur l
 
-    if tirage == substitution:                          # 3 chance /300 = 1/100
+    if tirage == substitution:
+        print("s")
         nuc = augc[random.randint(0, 3)]                # Un nucléotide de remplacement choisi au hasard
-        while nuc == seq[pos_mutation]:                 # Au cas ou le nuc de remplacement est le même que l'original
+        while nuc == seqbis[pos_mutation]:                 # Au cas ou le nuc de remplacement est le même que l'original
             nuc = augc[random.randint(0, 3)]            # on retire un nuc jusqu'a ce qu'il soit différent de l'original
-        seq[pos_mutation] = nuc                         # On remplace
-
-    elif tirage == deletion:                            # 3 chance /300 = 1/100
-        del seq[pos_mutation]
-
-    elif tirage == insertion:                           # 3 chance /300 = 1/100
+        seqbis[pos_mutation] = nuc
+    elif tirage == deletion:
+        print("d")
+        del seqbis[pos_mutation]
+    elif tirage == insertion:
+        print("i")
         nuc = augc[random.randint(0, 3)]                # un nucléotide choisi au hasard
-        seq.insert(pos_mutation, nuc)                   # On l'insert
-
-    return seq
+        seqbis.insert(pos_mutation, nuc)
+    return seqbis
 
 # MOYENNE
+# calcul la moyenne des score pour une population
+# param ListeScore : la liste des scores pour chaque séquence de la population
+# return : la moyenne des scores de la ListeScore
 def MoyenneScore(ListeScore):
     moy = 0                                             # On initialise la moyenne = 0
     for i in range(0, (len(ListeScore))):               # Pour chaque score dans ListeScore
@@ -165,7 +204,11 @@ def MoyenneScore(ListeScore):
                                                         # definit par le nombre d'éléments dans la liste
     return moy
 
-
+# RECOMBINAISON
+# effectue ou non une recombinaison entre deux séquences
+# param sequence1 : une séquence
+# param sequence2 : une autre séquence
+# return : ces 2 séquences recombinées ou pas
 def recombinaison(sequence1, sequence2):
     ext = random.randint(0, 1)              # On tire soit un 1 soit un 0 au hasard, ce qui va definir si la recombinaison
                                             # aura lieu sur l'extrémité 5' ou 3'
@@ -209,12 +252,6 @@ repli = [repli1] + [repli2] + [repli3] + [repli4]
 
 listeapp = (ListeAppariements(repli))  #liste de liste contenant 2 positions : la position des appariements de la sequence cible
 
-
-# mutation
-# on définit le tirage qui induira une mutation dans la fonction mutation
-substitution = 1
-deletion = 2
-insertion = 3
 
 #reproduction
 nbr_generation = 100
