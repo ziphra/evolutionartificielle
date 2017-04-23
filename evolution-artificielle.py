@@ -21,8 +21,8 @@ def PopDeDepart(l, N):
     for i in range(N):                      # On crée N séquences en passant N fois dans cette boucle
         seq = []                            # Une liste initialement vide qui contiendra UNE séquence
         for y in range(l):                  # La séquence contiendra l nucléotide en passant l fois dans la boucle
-            tirage = random.randint(0, 3)   # On choisit un nombre au hasard compris entre 0 et 3
-            nuc = augc[tirage]              # qui representera l'indexe d'un nucléotide dans la liste augc
+                                            # On choisit un nombre au hasard compris entre 0 et 3
+            nuc = augc[random.randint(0, 3)]              # qui representera l'indexe d'un nucléotide dans la liste augc
             seq.append(nuc)                 # On ajoute ce nucléotide à la sequence
         sequences.append(seq)               # À l'issu de cette boucle on ajoute la séquence à la population
     return sequences
@@ -83,8 +83,7 @@ def complementaire(sequence, pos1, pos2):   # pos1 et pos2 sont les positions de
     elif (sequence[pos1] == "C"):
         # C s'apparie avec G
         complement = (sequence[pos2] == "G")
-    else:
-        raise RuntimeError("Unexpected nucleotide " + sequence[pos1])
+
     return complement
 
 
@@ -96,31 +95,83 @@ def complementaire(sequence, pos1, pos2):   # pos1 et pos2 sont les positions de
 # et les valeurs sont les positions où on les rencontre dans la séquence
 # return : scores des séquences (liste de même taille que la liste de séquences: un score par séquence)
 def score(listeapp, sequences, consensus):
-    ListeScore = []                             # Une liste initialement vide qui contiendra tous les scores
+    ListeScore = []
+                                # Une liste initialement vide qui contiendra tous les scores
     for k in range(0, len(sequences)):          # Pour chaque nucléotides de la séquence
         score = 0                               # Le score est initialisé à 0
-        for i in range(0, (len(listeapp))):     # Pour chaque appariement
-                pos1 = listeapp[i][0]           # La position des nucléotides s'appariants dans la formation des boucles
-                pos2 = listeapp[i][1]
-                if (len(sequences[k])) >= pos1 and (len(sequences[k])) >= pos2:     # conditions pour éviter les erreurs
-                                                                 # de types liste index out of range
-                                                                                    # si la séquence se raccourcie
-                    if complementaire(sequences[k], pos1, pos2) == True:            # Si les nucs peuvent s'apparier
-                        score += 1                                                  # On incrémente le score de 1
-        for cle in consensus:                   # Pour A, G, C, U qui sont les clés de mon dic (voir prog principal)
-            value = consensus.get(cle)          # On recupere les valeurs : donc les positions ex : (33, 8) pour U
-            for o in range(len(value)):         # Pour chacune de ces valeurs (len(value))
-                n = value[o]                    # On recupere dans n une des valeurs : ex : value[O] = 33
 
-                if (len(sequences[k])-1) >= n and sequences[k][n] == cle :          # Conditions pour éviter les erreurs
-                                                                                    # de types liste index out of range
-                                                                                    # si la séquence se raccourcie
-                                                                                    # Si le nucleotide de la sequence k,
-                                                                                    # à la position n = cle
-                                                           # Ex : sequences[k][33] == U
-                    score += 1                  # alors le score augmente + 1
-        ListeScore.append(score)                # On ajoute le score obtenu à ListeScore
+
+        if len(sequences[k]) <= 76:
+
+            for i in range(0, (len(listeapp))):     # Pour chaque appariement
+                    pos1 = listeapp[i][0]           # La position des nucléotides s'appariants dans la formation des boucles
+                    pos2 = listeapp[i][1]
+
+                    if (len(sequences[k])) >= pos1 and (len(sequences[k])) >= pos2:     # conditions pour éviter les erreurs
+                                                                     # de types liste index out of range
+                                                                                        # si la séquence se raccourcie
+                        if complementaire(sequences[k], pos1, pos2) == True:            # Si les nucs peuvent s'apparier
+                            score += 1                                                  # On incrémente le score de 1
+            for cle in consensus:                   # Pour A, G, C, U qui sont les clés de mon dic (voir prog principal)
+                value = consensus.get(cle)          # On recupere les valeurs : donc les positions ex : (33, 8) pour U
+                for o in range(len(value)):         # Pour chacune de ces valeurs (len(value))
+                    n = value[o]                    # On recupere dans n une des valeurs : ex : value[O] = 33
+
+                    if (len(sequences[k])-1) >= n and sequences[k][n] == cle :          # Conditions pour éviter les erreurs
+                                                                                        # de types liste index out of range
+                                                                                        # si la séquence se raccourcie
+                                                                                        # Si le nucleotide de la sequence k,
+                                                                                        # à la position n = cle
+                                                               # Ex : sequences[k][33] == U
+                        score += 1                  # alors le score augmente + 1
+            ListeScore.append(score)                # On ajoute le score obtenu à ListeScore
+
+        else:
+            scorexl = phenotypexl(listeapp, sequences[k], consensus)
+            ListeScore.append(scorexl)
+    print (ListeScore)
     return ListeScore
+
+
+
+
+
+def phenotypexl(listeapp, sequence, consensus):
+    scoresinter = []
+    for k in range(0, len(sequence)):          # Pour chaque nucléotides de la séquence
+                                      # Le score est initialisé à 0
+        cadre = len(sequence)-76
+
+        for j in range(cadre):
+            score = 0
+            for cle in consensus:                   # Pour A, G, C, U qui sont les clés de mon dic (voir prog principal)
+                value = consensus.get(cle)          # On recupere les valeurs : donc les positions ex : (33, 8) pour U
+                for o in range(len(value)):         # Pour chacune de ces valeurs (len(value))
+                    n = value[o] + j                    # On recupere dans n une des valeurs : ex : value[O] = 33
+                    if sequence[n] == cle:
+                        score += 1
+
+
+
+            for k in range(0, (len(listeapp))):     # Pour chaque appariement
+                    pos1 = listeapp[k][0] + j         # La position des nucléotides s'appariants dans la formation des boucles
+                    pos2 = listeapp[k][1] + j
+
+                    if complementaire(sequence, pos1, pos2) == True:            # Si les nucs peuvent s'apparier
+                        score += 1
+            scoresinter.append(score)
+
+
+
+    score = Fctmax(scoresinter)
+    return score
+
+
+
+
+
+
+
 
 #REPRODUCTION
 # génère une nouvelle population de séquences, en favorisant les séquences de plus grand score
@@ -130,7 +181,7 @@ def score(listeapp, sequences, consensus):
 # return : une nouvelle population, et la liste des scores associé à chaque séquence
 def reproduction(sequences, N):
     enfants = []                                # Une liste vide qui contiendra les séquences qui se sont dupliquées
-    e = 0
+
 
     ListeScore = score(listeapp, sequences, consensus)  # On fait la liste des scores des séquences de la pop en question
     while len(enfants) < (N):                   # Tant que la population ne dépasse pas N
@@ -141,7 +192,6 @@ def reproduction(sequences, N):
         if scorej > a:
                                                         # scorj chance sur 42 que a soit <= scorej
             NewSeq = mutation(sequences[j])  # mutation ou pas...
-            #NewSeq = sequences[j]
             enfants.append(NewSeq)              # stockage des séquences dans une liste
     TirageRecomb = random.randint(0, 100)       # On tire un nombre au hasard
     if TirageRecomb == 16:                      # 1 chance sur 100 de tomber sur 16
@@ -171,7 +221,7 @@ def mutation(seq):   # seq = un seul ARNt
     substitution = 1
     deletion = 2
     insertion = 3
-    tirage = random.randint(1, 100)                     # il ya 1 chance /100 d'avoir une mutation de 3 types différents                                                   # 1 chance /300 pour chaque type
+    tirage = random.randint(1, 300)                     # il ya 1 chance /100 d'avoir une mutation de 3 types différents                                                   # 1 chance /300 pour chaque type
     seqbis = copy.deepcopy(seq)                                                 # On tire aléatoirement un nombre entre 1, 300
     augc = ["A", "U", "G", "C"]
     pos_mutation = random.randint(0, (len(seq)-1))      # Une position choisie au hasard dans la séquence de longueur l
@@ -231,13 +281,19 @@ def recombinaison(sequence1, sequence2):
 
     return [sequence1bis, sequence2bis]
 
+def Fctmax(ListeScore):
+    c=ListeScore[0]
+    for X in ListeScore :
+        if X>c:
+            c=X
+    return c
 
 
 #P R O G R A M M E  P R I N C I P A L
 
 #population de depart
 l = 75          # longueur de la séquence
-N = 100         # nombre de chaines
+N = 300        # nombre de chaines
 enfants = PopDeDepart(l,N)
 
 #sequences consensus
@@ -254,7 +310,7 @@ listeapp = (ListeAppariements(repli))  #liste de liste contenant 2 positions : l
 
 
 #reproduction
-nbr_generation = 100
+nbr_generation = 1000
 ListeMoy = []
 moy = 0
 
