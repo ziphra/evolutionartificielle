@@ -15,16 +15,15 @@ import matplotlib.pyplot as plt
 # une nucléotide est représentée par une chaine de 1 caratère: A, U, G ou C)
 def PopDeDepart(l, N):
 
-    augc = ["A", "U", "G", "C"]             # Nucléotides
-    sequences = []                          # Une liste initialement vide qui contiendra les séquences de la pop de départ
+    augc = ["A", "U", "G", "C"]                           # Nucléotides
+    sequences = []                                        # Une liste initialement vide qui contiendra les séquences de la pop de départ
 
-    for i in range(N):                      # On crée N séquences en passant N fois dans cette boucle
-        seq = []                            # Une liste initialement vide qui contiendra UNE séquence
-        for y in range(l):                  # La séquence contiendra l nucléotide en passant l fois dans la boucle
-            tirage = random.randint(0, 3)   # On choisit un nombre au hasard compris entre 0 et 3
-            nuc = augc[tirage]              # qui representera l'indexe d'un nucléotide dans la liste augc
-            seq.append(nuc)                 # On ajoute ce nucléotide à la sequence
-        sequences.append(seq)               # À l'issu de cette boucle on ajoute la séquence à la population
+    for i in range(N):                                    # On crée N séquences en passant N fois dans cette boucle
+        seq = []                                          # Une liste initialement vide qui contiendra UNE séquence
+        for y in range(l):                                # La séquence contiendra l nucléotide en passant l fois dans la boucle 
+            nuc = augc[random.randint(0, 3)]              # On choisit un nombre au hasard compris entre 0 et 3qui representera l'indexe d'un nucléotide dans la liste augc
+            seq.append(nuc)                               # On ajoute ce nucléotide à la sequence
+        sequences.append(seq)                             # À l'issu de cette boucle on ajoute la séquence à la population
     return sequences
 
 
@@ -62,29 +61,18 @@ def ListeAppariements(repli):
 # return true si les 2 nucléotides sont complémentaires
 def complementaire(sequence, pos1, pos2):   # pos1 et pos2 sont les positions des nucleotides dont on cherche
                                             # à savoir la complémentarité
-    if (len(sequence)-1 < pos1):
-        # pos1 en dehors de la séquence
-        return False
+    if ((len(sequences)-1) >= (pos1) and (len(sequences)-1) >= (pos2)) and  ((sequences[pos1] == "A" and sequences[pos2] == "U") or (sequences[pos2] == "A" and sequences[pos1] == "U")):
+        complement = True
 
-    if (len(sequence)-1 < pos2):
-        # pos2 en dehors de la séquence
-        return False
+    elif ((len(sequences)-1) >= (pos1) and (len(sequences)-1) >= (pos2)) and ((sequences[pos1] == "G" and sequences[pos2] == "C") or (sequences[pos2] == "G" and sequences[pos1] == "C")):
+        complement = True
 
-    complement = False
-    if (sequence[pos1] == "A"):
-        # A s'apparie avec U
-        complement = (sequence[pos2] == "U")
-    elif (sequence[pos1] == "U"):
-        # U s'apparie avec A ou G
-        complement = ((sequence[pos2] == "A") or (sequence[pos2] == "G"))
-    elif (sequence[pos1] == "G"):
-       # U s'apparie avec C ou U
-        complement = ((sequence[pos2] == "C") or (sequence[pos2] == "U"))
-    elif (sequence[pos1] == "C"):
-        # C s'apparie avec G
-        complement = (sequence[pos2] == "G")
+    elif  ((len(sequences)-1) >= (pos1) and (len(sequences)-1) >= (pos2)) and ((sequences[pos1] == "G" and sequences[pos2] == "U") or (sequences[pos2] == "G" and sequences[pos1] == "U")):
+        complement = True
+
     else:
-        raise RuntimeError("Unexpected nucleotide " + sequence[pos1])
+        complement = False
+
     return complement
 
 
@@ -112,13 +100,20 @@ def score(listeapp, sequences, consensus):
             for o in range(len(value)):         # Pour chacune de ces valeurs (len(value))
                 n = value[o]                    # On recupere dans n une des valeurs : ex : value[O] = 33
 
-                if (len(sequences[k])-1) >= n and sequences[k][n] == cle :          # Conditions pour éviter les erreurs
-                                                                                    # de types liste index out of range
-                                                                                    # si la séquence se raccourcie
-                                                                                    # Si le nucleotide de la sequence k,
-                                                                                    # à la position n = cle
+                if (n<len(sequences[k]) and k<len(sequences)) and sequences[k][n] == cle:          # Conditions pour éviter les erreurs
+                                                                                                   # de types liste index out of range
+                                                                                                   # si la séquence se raccourcie
+                                                                                                   # Si le nucleotide de la sequence k,
+                                                                                                   # à la position n = cle
                                                            # Ex : sequences[k][33] == U
                     score += 1                  # alors le score augmente + 1
+        if cadre_lecture!=0:                    #si la séquence fait plus ou moins de 75 nucléotides dû aux mutations de délétion et d'insertion
+		compscore=[]
+		for i in range(0,cadre_lecture):        #en fonction des différents cadres de lecture, on calcule les différents appariements possibles
+		    scorebis=score(listeapp, sequences, consensus)
+			compscore.append(scorebis)          #on crée un liste avec les différents scores possibles
+			score=Fctmax(scorebis)              #on ne garde que le meilleur score, et donc les meilleurs appariements
+
         ListeScore.append(score)                # On ajoute le score obtenu à ListeScore
     return ListeScore
 
@@ -130,18 +125,16 @@ def score(listeapp, sequences, consensus):
 # return : une nouvelle population, et la liste des scores associé à chaque séquence
 def reproduction(sequences, N):
     enfants = []                                # Une liste vide qui contiendra les séquences qui se sont dupliquées
-    e = 0
 
     ListeScore = score(listeapp, sequences, consensus)  # On fait la liste des scores des séquences de la pop en question
     while len(enfants) < (N):                   # Tant que la population ne dépasse pas N
 
-        a = random.randint(0, 45)               # 21 appariements + 24 consensus
+        a = random.randint(0, 46)               # 21 appariements + 25 consensus
         j = random.randint(0, (N-1))            # Un nombre au hasard entre 0, N-1 soit pour chaque indice de la liste
         scorej = ListeScore[j]                  # On tire la séquence associée au score grace à l'indice du score
         if scorej > a:
                                                         # scorj chance sur 42 que a soit <= scorej
             NewSeq = mutation(sequences[j])  # mutation ou pas...
-            #NewSeq = sequences[j]
             enfants.append(NewSeq)              # stockage des séquences dans une liste
     TirageRecomb = random.randint(0, 100)       # On tire un nombre au hasard
     if TirageRecomb == 16:                      # 1 chance sur 100 de tomber sur 16
@@ -168,27 +161,26 @@ def reproduction(sequences, N):
 # param seq : une séquence
 # return : la même séquence mutée ou pas
 def mutation(seq):   # seq = un seul ARNt
-    substitution = 1
-    deletion = 2
-    insertion = 3
     tirage = random.randint(1, 100)                     # il ya 1 chance /100 d'avoir une mutation de 3 types différents                                                   # 1 chance /300 pour chaque type
     seqbis = copy.deepcopy(seq)                                                 # On tire aléatoirement un nombre entre 1, 300
     augc = ["A", "U", "G", "C"]
     pos_mutation = random.randint(0, (len(seq)-1))      # Une position choisie au hasard dans la séquence de longueur l
 
-    if tirage == substitution:
+    if tirage == 1:                                     #substitution :1/100 chance
         print("s")
         nuc = augc[random.randint(0, 3)]                # Un nucléotide de remplacement choisi au hasard
         while nuc == seqbis[pos_mutation]:                 # Au cas ou le nuc de remplacement est le même que l'original
             nuc = augc[random.randint(0, 3)]            # on retire un nuc jusqu'a ce qu'il soit différent de l'original
         seqbis[pos_mutation] = nuc
-    elif tirage == deletion:
+    elif tirage == 2:                                   #délétion :1/100 chance
         print("d")
         del seqbis[pos_mutation]
-    elif tirage == insertion:
+    elif tirage == insertion:                           #insertion : 1/100 chance
         print("i")
         nuc = augc[random.randint(0, 3)]                # un nucléotide choisi au hasard
         seqbis.insert(pos_mutation, nuc)
+    else:
+        print "Pas de mutation"
     return seqbis
 
 # MOYENNE
@@ -231,37 +223,48 @@ def recombinaison(sequence1, sequence2):
 
     return [sequence1bis, sequence2bis]
 
+def Fctmax(ListeScore):
+	c=ListeScore[0]
+	for X in ListeScore :
+		if X>c:
+			c=X
+	return c 
 
 
 #P R O G R A M M E  P R I N C I P A L
 
 #population de depart
 l = 75          # longueur de la séquence
-N = 100         # nombre de chaines
+N = 10000         # nombre de chaines
 enfants = PopDeDepart(l,N)
 
 #sequences consensus
 consensus = {"C": (11, 25, 32, 48, 60, 62, 74, 75), "U": (8, 11, 25, 32, 33, 48, 60, 62), "A": (14, 21, 58, 9, 10, 15, 24, 37, 52, 57, 75), "G":(19, 18, 53,9, 10, 15, 24, 37, 52, 57)}
 
 #appariements
-repli1 = [1, 7, 72]
-repli2 = [10, 13, 25]
-repli3 = [27, 31, 43]
-repli4 = [49, 53, 65]
+for i in range(0,len(enfants)):
+	cadre_lecture=len(enfants[i])-l                                     #prendre en compte le fait que la séquence ne fait pas forcément 75 nucléotides
+    repli1 = [1+cadre_lecture, 7+cadre_lecture, 72+cadre_lecture]
+	repli2 = [10+cadre_lecture, 12+cadre_lecture, 25+cadre_lecture]
+	repli3 = [27+cadre_lecture, 31+cadre_lecture, 43+cadre_lecture]
+	repli4 = [49+cadre_lecture, 53+cadre_lecture, 65+cadre_lecture]
+
 repli = [repli1] + [repli2] + [repli3] + [repli4]
 
 listeapp = (ListeAppariements(repli))  #liste de liste contenant 2 positions : la position des appariements de la sequence cible
 
 
 #reproduction
-nbr_generation = 100
-ListeMoy = []
+nbr_generation = 350
+ListeMoy = []                                   #Liste des moyennes de scores de chaque génération
+LSMax=[]                                        # Liste des scores maximaux de chaque génération
 moy = 0
 
 for i in range(nbr_generation):                 # On répète autant de fois que de générations désirées le processus programmé
     EnfantsScore = reproduction(enfants, N)     # enfants ici = PopDeDépart
     ListeScore = EnfantsScore[1]                # en postion 1 dans la liste on a retourné Liste score
                                                 # return [enfants, ListeScore]
+    LSMax.append(Fctmax(ListeScore))            #ajout du score maximal de la génération à la liste de scores maximaux de toutes les générations
     moy = MoyenneScore(ListeScore)              # on calcul la moyenne pour tracer le graphique
     ListeMoy.append(moy)                        # on stocke les moyennes dans une liste
     enfants = EnfantsScore[0]                   # en position 0, la liste des nv sequences
@@ -276,6 +279,7 @@ for i in range(nbr_generation):
     abs.append(i+1)                         # numero de la génération
 
 plt.plot(abs, ListeMoy)                     # (numero de la génération en x, moyenne en y)
+plt.plot(abs,LSMax)                         # ajout de la courbe des scores maximaux
 plt.ylabel('Score Moyen')                   # titre axe des y
 plt.xlabel('Nombre De Generation')          # titre axe des x
 plt.show()                                  # affichage
