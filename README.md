@@ -7,7 +7,6 @@ Dans le cadre d'un projet pour l'unité d'enseignement complémentaire "programm
 * la recombinaison entre séquences 
 * et la sélection des séquences les mieux adaptés, en les comparant à une "séquence cible", c'est à dire dont la configuration est optimale.
 
-Ainsi nous avons simulé la reproduction et l’évolution d'une population d'ARNt. Nous avons ensuite observé grâce au traçage d’une courbe des scores moyens et des scores max au fil des générations.
-Le score d’une séquence est une mesure de la ressemblance de cette séquence avec la « séquence cible »
+Ainsi nous avons simulé la reproduction et l’évolution d'une population d'ARNt. Nous avons ensuite observé grâce au traçage d’une courbe les scores moyens et les scores max des séquences au fil des générations. Le score d’une séquence étant une mesure de la ressemblance de cette séquence avec la « séquence cible »
  
 
